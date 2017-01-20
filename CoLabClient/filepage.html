@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CoLab</title>
+    <link href="style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ext-modelist.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ext-language_tools.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="header">
+    </div>
+    <table class="content">
+        <tr>
+            <td id="panel">
+                <div id="project-explorer-header">Test Project</div>
+                <ul id="project-explorer-files">
+                    <li>
+                        Files
+                        <ul>
+                            <li><a href="#">Dir1</a></li>
+                            <li><a href="#">Dir2</a></li>
+                            <li><a href="#">Dir3</a></li>
+                            <li><a href="#">Dir4</a></li>
+                        </ul>
+                    </li>
+                    <li>test.js</li>
+                    <li>test.html</li>
+                </ul>
+            </td>
+            <td contenteditable="true" id="code"></td>
+        </tr>
+    </table>
+    <div class="footer">
+        <div id="position">1:1</div>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>

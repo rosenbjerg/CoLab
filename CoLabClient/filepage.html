@@ -10,6 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ext-modelist.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ext-language_tools.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="header">
@@ -17,27 +19,32 @@
     <table class="content">
         <tr>
             <td id="panel">
-                <div id="project-explorer-header">Test Project</div>
-                <ul id="project-explorer-files">
-                    <li>
-                        Files
-                        <ul>
-                            <li><a href="#">Dir1</a></li>
-                            <li><a href="#">Dir2</a></li>
-                            <li><a href="#">Dir3</a></li>
-                            <li><a href="#">Dir4</a></li>
-                        </ul>
-                    </li>
-                    <li>test.js</li>
-                    <li>test.html</li>
+                <div id="project-explorer-header"><a name="">Test project</a></div>
+                <ul id="project-explorer-files" class="tree no-select">
+                </ul>
+                <ul class='custom-menu no-select' id="rootdir-rightclick">
+                    <li data-action = "addNewFile">Add new file</li>
+                    <li data-action = "addNewDir">Add new directory</li>
+                </ul>
+                <ul class='custom-menu no-select' id="dir-rightclick">
+                    <li data-action = "addNewFile">Add new file</li>
+                    <li data-action = "addNewDir">Add new directory</li>
+                    <li data-action = "rename">Rename</li>
+                    <li data-action = "delete">Delete</li>
+                </ul>
+                <ul class='custom-menu no-select' id="file-rightclick">
+                    <li data-action = "rename">Rename</li>
+                    <li data-action = "delete">Delete</li>
                 </ul>
             </td>
             <td contenteditable="true" id="code"></td>
         </tr>
     </table>
-    <div class="footer">
-        <div id="position">1:1</div>
+
+    <div class="footer no-select">
+        <div id="position">1:0</div>
     </div>
+    <div id="dialogTarget"></div>
     <script src="main.js"></script>
 </body>
 </html>

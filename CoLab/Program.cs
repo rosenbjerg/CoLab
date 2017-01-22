@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,18 +18,93 @@ namespace CoLab
             const string dir = "files";
 
             var server = new TaskBasedHttpServer(5005);
-            var db = new LiteDatabase("db.lite").GetCollection<User>("User");
+            var ldb = new LiteDatabase("db.lite");
+            var udb = ldb.GetCollection<User>("Users");
+            var pdb = ldb.GetCollection<Project>("Projects");
             var rsa = CryptoRsa.GenerateKeyPair();
             var pub = rsa.Item1;
             var priv = rsa.Item2;
             var activeFiles = new ConcurrentDictionary<string, List<WebSocketDialog>>();
             var openEditableFiles = new ConcurrentDictionary<string, EditableFile>();
             var sb = new StringBuilder(System.IO.File.ReadAllText("./test.txt"));
+            var activeProjects = new ConcurrentDictionary<string, ConcurrentDictionary<string, EditableFile>>();
 
             
-            server.Get("/project/:team/:project", (req, res) =>
+            server.Get("/project/:project", (req, res) =>
             {
-                if (!VerifyUser(req, res)) return;
+                string uid;
+                if (!VerifyUser(req, res, out uid)) return;
+                var pid = req.Params["project"];
+                var p = pdb.FindById(pid);
+                if (p == null)
+                {
+                    res.SendString("", status: 404);
+                    return;
+                }
+                if (uid != p.OwnerId && !p.Collaborators.Contains(uid))
+                {
+                    res.SendString("", status: 401);
+                    return;
+                }
+                res.SendJson(p.Files);
+            });
+
+            server.Post("/project/:project/file", (req, res) =>
+            {
+                string uid;
+                if (!VerifyUser(req, res, out uid)) return;
+                var pid = req.Params["project"];
+                var p = pdb.FindById(pid);
+                if (p == null)
+                {
+                    res.SendString("Project not found", status: 404);
+                    return;
+                }
+                if (uid != p.OwnerId && !p.Collaborators.Contains(uid))
+                {
+                    res.SendString("You do not have access to the project", status: 401);
+                    return;
+                }
+                ConcurrentDictionary<string, EditableFile> openFiles;
+                if (!activeProjects.TryGetValue(pid, out openFiles))
+                {
+                    openFiles = new ConcurrentDictionary<string, EditableFile>();
+                    activeProjects.TryAdd(pid, openFiles);
+                }
+                var file = req.ParseBody<string>();
+                EditableFile ef;
+                if (!openFiles.TryGetValue(file, out ef))
+                {
+                    if (!FileManager.TryGetFile(pid, file, out ef))
+                    {
+                        res.SendString("File could not be found", status:404);
+                        return;
+                    }
+                    openFiles.TryAdd(file, ef);
+                }
+                res.SendString(ef.GetString());
+            });
+            server.Post("/project/:project/create", (req, res) =>
+            {
+                string uid;
+                if (!VerifyUser(req, res, out uid)) return;
+                var pid = req.Params["project"];
+                var p = pdb.FindById(pid);
+                if (p == null)
+                {
+                    res.SendString("Project not found", status: 404);
+                    return;
+                }
+                if (uid != p.OwnerId && !p.Collaborators.Contains(uid))
+                {
+                    res.SendString("You do not have access to the project", status: 401);
+                    return;
+                }
+                var file = req.ParseBody<string>();
+                if (!FileManager.CreateNewFile(pid, file))
+                    res.SendString("File with given name already exists in directory", status: 409);
+                else
+                    res.SendString("OK");
             });
 
             server.Get("/login", (req, res) =>
@@ -42,7 +118,7 @@ namespace CoLab
                 var um = CryptoRsa.Decrypt(uq["u"], priv);
                 var pwd = CryptoRsa.Decrypt(uq["p"], priv);
 
-                var user = db.FindOne(u => u.Email == um);
+                var user = udb.FindOne(u => u.Email == um);
                 if (user == null || user.PassHash != pwd)
                 {
                     await Task.Delay(1000);
@@ -64,22 +140,17 @@ namespace CoLab
 
             server.Get("/user/:user", (req, res) =>
             {
-                if (!VerifyUser(req, res)) return;
+                string uid;
+                if (!VerifyUser(req, res, out uid)) return;
 
             });
 
-            server.Get("/team/:team", (req, res) =>
+            server.Get("/user/:user/projects", (req, res) =>
             {
-                if (!VerifyUser(req, res)) return;
+                string uid;
+                if (!VerifyUser(req, res, out uid)) return;
 
             });
-
-            server.Get("/team/:team/:project", (req, res) =>
-            {
-                if (!VerifyUser(req, res)) return;
-
-            });
-            
             
             server.Get("/file/:file", (req, res) =>
             {
@@ -144,7 +215,7 @@ namespace CoLab
             server.Start(true);
         }
 
-        private static bool VerifyUser(RRequest req, RResponse res)
+        private static bool VerifyUser(RRequest req, RResponse res, out string uid)
         {
             var id = req.Cookies["id"].Value;
             var token = req.Cookies["token"].Value;
@@ -152,10 +223,13 @@ namespace CoLab
             if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(id) || !_sessions.TryGetValue(id, out sess) || sess.Token != token)
             {
                 res.SendString("no", status: 401);
+                uid = "";
                 return false;
             }
+            uid = sess.User;
             return true;
         }
+        
 
         private async void Persister()
         {
@@ -166,6 +240,46 @@ namespace CoLab
         }
     }
 
+    static class FileManager
+    {
+        private const string projDir = "./projects";
+
+        static FileManager()
+        {
+            Directory.CreateDirectory(projDir);
+        }
+
+        public static bool TryGetFile(string project, string file, out EditableFile ef)
+        {
+            var filepath = Path.Combine(projDir, projDir, file);
+            if (!File.Exists(filepath))
+            {
+                ef = null;
+                return false;
+            }
+            ef = EditableFile.FromFile(filepath);
+            return true;
+        }
+
+        public static bool Exists(string project, string file)
+        {
+            var filepath = Path.Combine(projDir, projDir, file);
+            return File.Exists(filepath);
+        }
+
+        public static bool CreateNewFile(string project, string file)
+        {
+            var filepath = Path.Combine(projDir, projDir, file);
+            if (File.Exists(filepath))
+            {
+                return false;
+            }
+            Directory.CreateDirectory(filepath);
+            File.WriteAllText(filepath, "");
+            return true;
+        }
+    }
+
     class Session
     {
         public string Token { get; set; }
@@ -173,21 +287,35 @@ namespace CoLab
         public DateTime ExpireUTC { get; set; }
     }
 
+    class ProjDir
+    {
+        public string Name { get; set; }
+        public List<ProjDir> Dirs { get; set; } = new List<ProjDir>();
+        public List<string> Files { get; set; } = new List<string>();
+    }
+
     class Project
     {
+        [BsonId]
+        public string Id { get; set; } = Guid.NewGuid().ToString("N");
         public string Title { get; set; }
         public string Description { get; set; }
         public string OwnerId { get; set; }
-        public List<string> Files { get; set; }
+        public ProjDir Files { get; set; } = new ProjDir {Name = ""};
+        public List<string> Collaborators { get; } = new List<string>();
+        
+        [BsonIgnore]
+        public List<EditableFile> OpenFiles { get; } = new List<EditableFile>();
     }
-
-
-
+    
     class User
     {
         public string Email { get; set; }
-        public string Id { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString("N");
         public string DisplayName { get; set; }
         public string PassHash { get; set; }
+
+        public List<string> Projects { get; set; } = new List<string>();
+        public List<string> CollaboratorOn { get; set; } = new List<string>();
     }
 }

@@ -104,6 +104,21 @@ html, body {
     background-color: #DEF;
 }
 
+#ace_settingsmenu, #kbshortcutmenu{
+    background-color: #616161;
+}
+
+#ace_settingsmenu *, #kbshortcutmenu * {
+    background-color: #616161;
+    font-family: 'Open Sans', sans-serif;
+}
+
+#ace_settingsmenu input, #ace_settingsmenu select{
+    background-color: #818181;
+    border-width: 1px;
+    text-align: right;
+}
+
 #project-explorer-header > a{
     cursor: pointer;
 }
@@ -141,7 +156,7 @@ html, body {
 .tree li:after{
     border-left: 1px solid #212121;
     height: 100%;
-    width: 0px;
+    width: 0;
     top: -10px;
 }
 .tree > li::after{

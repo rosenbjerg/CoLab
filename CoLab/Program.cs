@@ -25,11 +25,16 @@ namespace CoLab
             var pub = rsa.Item1;
             var priv = rsa.Item2;
             var activeFiles = new ConcurrentDictionary<string, List<WebSocketDialog>>();
-            var openEditableFiles = new ConcurrentDictionary<string, EditableFile>();
             var sb = new StringBuilder(System.IO.File.ReadAllText("./test.txt"));
-            var activeProjects = new ConcurrentDictionary<string, ConcurrentDictionary<string, EditableFile>>();
+            var activeProjects = new ConcurrentDictionary<string, Project>();
 
-            
+            pdb.Insert(new Project
+            {
+                Files = ProjDir.FromDirectory(new DirectoryInfo("projects/testproject")),
+                Title = "Test project",
+
+            });
+
             server.Get("/project/:project", (req, res) =>
             {
                 string uid;
@@ -45,6 +50,44 @@ namespace CoLab
                 {
                     res.SendString("", status: 401);
                     return;
+                }
+                res.SendJson(p.Files);
+            });
+
+            server.Get("/project/:projectid/:fileid", (req, res) =>
+            {
+                string uid;
+                if (!VerifyUser(req, res, out uid)) return;
+                var pid = req.Params["projectid"];
+                var fid = req.Params["projectid"];
+                var p = pdb.FindById(pid);
+                if (p == null)
+                {
+                    res.SendString("", status: 404);
+                    return;
+                }
+                if (uid != p.OwnerId && !p.Collaborators.Contains(uid))
+                {
+                    res.SendString("", status: 401);
+                    return;
+                }
+                if (p == null)
+                {
+                    res.SendString("", status: 404);
+                    return;
+                }
+
+                var f = p.Files.Get(fid);
+                if (f == null)
+                {
+                    res.SendString("", status: 404);
+                    return;
+                }
+
+                EditableFile ef;
+                if ((ef = p.OpenFiles.FirstOrDefault(x => x.FilePath == fid)) == null)
+                {
+                    ef = FileManager.GetEditable(pid, fid);
                 }
                 res.SendJson(p.Files);
             });
@@ -187,22 +230,46 @@ namespace CoLab
                 res.SendString(file.GetString());
             });
 
-            server.WebSocket("/:file", (req, wsd) =>
+            server.WebSocket("/:project/:file", (req, wsd) =>
             {
-                var fname = req.Params["file"];
-                List<WebSocketDialog> list;
+                var pid = req.Params["project"];
+                var fid = req.Params["file"];
+                Project p;
+                if (!activeProjects.TryGetValue(pid, out p))
+                {
+                    p = pdb.FindById(pid);
+                    if (p != null)
+                    {
+                        activeProjects.TryAdd(pid, p);
+                    }
+                    else
+                    {
+                        wsd.Close();
+                        return;
+                    }
+                }
+
+
                 EditableFile file;
-                if (!activeFiles.TryGetValue(fname, out list))
+                if (!p.OpenFiles.TryGetValue(fid, out file))
+                {
+                    file = FileManager.GetEditable(pid, fid);
+                    if (file != null)
+                    {
+                        p.OpenFiles.TryAdd(fid, file);
+                    }
+                    else
+                    {
+                        wsd.Close();
+                        return;
+                    }
+                }
+
+                List<WebSocketDialog> list;
+                if (!activeFiles.TryGetValue(fid, out list))
                 {
                     list = new List<WebSocketDialog> {wsd};
-                    activeFiles.TryAdd(fname, list);
-                }
-                else
-                    list.Add(wsd);
-                if (!openEditableFiles.TryGetValue(fname, out file))
-                {
-                    file = EditableFile.FromFile(fname);
-                    openEditableFiles.TryAdd(fname, file);
+                    activeFiles.TryAdd(fid, list);
                 }
                 Console.WriteLine(list.Count);
 
@@ -222,13 +289,11 @@ namespace CoLab
                     lock (list)
                     {
                         list.Remove(wsd);
-                        if (list.Count == 0)
-                        {
-                            List<WebSocketDialog> tl;
-                            activeFiles.TryRemove("test", out tl);
-                            file.Save();
-                            openEditableFiles.TryRemove(fname, out file);
-                        }
+                        if (list.Count != 0) return;
+                        List<WebSocketDialog> tl;
+                        activeFiles.TryRemove(fid, out tl);
+                        file.Save();
+                        p.OpenFiles.TryRemove(fid, out file);
                     }
                 };
                 wsd.Ready();
@@ -262,60 +327,6 @@ namespace CoLab
         }
     }
 
-    static class FileManager
-    {
-        private const string projDir = "./projects";
-
-        static FileManager()
-        {
-            Directory.CreateDirectory(projDir);
-        }
-
-        public static bool TryGetFile(string project, string file, out EditableFile ef)
-        {
-            var filepath = Path.Combine(projDir, projDir, file);
-            if (!File.Exists(filepath))
-            {
-                ef = null;
-                return false;
-            }
-            ef = EditableFile.FromFile(filepath);
-            return true;
-        }
-
-        public static bool Exists(string project, string file)
-        {
-            var filepath = Path.Combine(projDir, projDir, file);
-            return File.Exists(filepath);
-        }
-
-        public static bool CreateNewFile(string project, string file)
-        {
-            var filepath = Path.Combine(projDir, projDir, file);
-            if (File.Exists(filepath))
-            {
-                return false;
-            }
-            Directory.CreateDirectory(filepath);
-            File.WriteAllText(filepath, "");
-            return true;
-        }
-    }
-
-    class Session
-    {
-        public string Token { get; set; }
-        public string User { get; set; }
-        public DateTime ExpireUTC { get; set; }
-    }
-
-    class ProjDir
-    {
-        public string Name { get; set; }
-        public List<ProjDir> Dirs { get; set; } = new List<ProjDir>();
-        public List<string> Files { get; set; } = new List<string>();
-    }
-
     class Project
     {
         [BsonId]
@@ -327,7 +338,7 @@ namespace CoLab
         public List<string> Collaborators { get; } = new List<string>();
         
         [BsonIgnore]
-        public List<EditableFile> OpenFiles { get; } = new List<EditableFile>();
+        public ConcurrentDictionary<string, EditableFile> OpenFiles { get; } = new ConcurrentDictionary<string, EditableFile>();
     }
     
     class User

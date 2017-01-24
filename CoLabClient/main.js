@@ -18,6 +18,7 @@ var code = $.get("http://localhost:5005/file/test.txt", function (data) {
     });
     editor.setTheme("ace/theme/monokai");
     editor.focus();
+    $("#ace_settingsmenu, #kbshortcutmenu").css("background-color", "#616161");
     ws = new WebSocket("ws://localhost:5005/test.txt");
 
     session.selection.on('changeCursor', function() {
@@ -50,6 +51,10 @@ function setPosition(l,c) {
     $pos.text(l + ":" + c);
 }
 
+function openFile() {
+    
+}
+
 window.addEventListener("beforeunload", function () {
     ws.close();
 });
@@ -80,8 +85,8 @@ function addFiles(rootDir, startPath) {
     }
     if (rootDir.Files){
         for (i = 0; i < rootDir.Files.length; i++){
-            id = startPath + "/" + rootDir.Files[i];
-            retVal += '<li><a name="' + id + '" onclick="hfc(\'' + id + '\')">' + rootDir.Files[i] + '</a></li>'
+            id = rootDir.Files[i].Id;
+            retVal += '<li><a id="' + id + '" onclick="hfc(\'' + id + '\')">' + rootDir.Files[i].Name + '</a></li>'
         }
     }
 
@@ -90,12 +95,11 @@ function addFiles(rootDir, startPath) {
 
 // Handle file click
 function hfc(file) {
-    if (file.charAt(0) == '/') file = file.substr(1);
     console.log("file clicked: " + file.trim("/"));
 }
 
 function loadMenu() {
-    $filePanel.append(addFiles(testMenu(), ""));
+    $filePanel.append(addFiles(, ""));
 
     $filePanel.find("a").on("click", function (e) {
         if ($(this).parent().has("ul")) {
@@ -134,36 +138,6 @@ function loadMenu() {
         });
     });
 
-}
-
-function testMenu() {
-    return {
-        Name: "",
-        Dirs: [
-            {
-                Name: "bin",
-                Dirs: [
-                    {
-                        Name: "Debug",
-                        Files: [
-                            "somecode.o",
-                            "somecode1.o",
-                            "somecode2.o",
-                            "somecode3.o"
-                        ]
-                    }
-                ],
-                Files: [
-                    "something.bin",
-                    "somethingelse.bin"
-                ]
-            }
-        ],
-        Files: [
-            "Program.cs",
-            "SomeHandler.cs"
-        ]
-    };
 }
 
 loadMenu();
@@ -212,7 +186,7 @@ $(".custom-menu li").click(function(){
                 var fd = new FormData(document.querySelector("form"));
                 fd.append("CustomField", "This is some extra data");
                 $.ajax({
-                    url: "/project/" + pid + "upload",
+                    url: "/project/" + pid + "/upload",
                     type: "POST",
                     data: fd,
                     processData: false,  // tell jQuery not to process the data

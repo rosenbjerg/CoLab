@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using RHttpServer;
 
 namespace CoLab
 {
@@ -12,13 +13,15 @@ namespace CoLab
 
         }
         
-        public string FilePath { get; private set; }
+        public List<WebSocketDialog> ActiveEditors { get; } = new List<WebSocketDialog>();
+
+        public string FileId { get; private set; }
 
         public static EditableFile FromFile(string file)
         {
             if (!File.Exists(file)) return null;
             var lines = File.ReadLines(file);
-            var retVal = new EditableFile {FilePath = file};
+            var retVal = new EditableFile {FileId = file.Substring(file.LastIndexOf("/") +1)};
             foreach (var line in lines)
             {
                 retVal._lines.Add(new StringBuilder(line));
@@ -83,9 +86,9 @@ namespace CoLab
         public void Save(string lineEnding = "\n")
         {
             if (!_changes) return;
-            File.WriteAllText(FilePath, GetString(lineEnding));
+            File.WriteAllText(FileId, GetString(lineEnding));
             _changes = false;
-            Console.WriteLine(FilePath + " saved");
+            Console.WriteLine(FileId + " saved");
         }
     }
 }

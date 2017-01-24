@@ -1,5 +1,5 @@
 var Range = require("ace/range").Range;
-var editor, session, ws, cmenuItemClicked, inserting = false, writing = false;
+var editor, session, ws, cmenuItemClicked, inserting = false, writing = false, pid = "davn84579owe4509n80";
 var $code = $("#code"), $pos = $("#position"), $filePanel = $("#project-explorer-files");
 var dirRegExp = /^[\w]+$/, fileRegExp = /^[\w\.]+$/;
 
@@ -104,7 +104,7 @@ function loadMenu() {
         $(this).next('ul').slideToggle();
     });
 
-    $("#project-explorer-header > a").bind("contextmenu", function (event) {
+    $("#project-explorer-header").find("> a").bind("contextmenu", function (event) {
         if (event.ctrlKey) return;
         event.preventDefault();
         cmenuItemClicked = $(this).attr('name');
@@ -169,9 +169,9 @@ function testMenu() {
 loadMenu();
 
 var $dialog = $("#dialogTarget");
-function openInputDialog(title, msg, val, checkFunc) {
+function openInputDialog(title, msg, val, html, checkFunc) {
     $dialog.text(msg + " ");
-    $dialog.append("<input id='dialogInput' type='text'/>");
+    $dialog.append(html);
     $("#dialogInput").val(val);
     $dialog.dialog({
         resizable: false,
@@ -197,14 +197,62 @@ $(".custom-menu li").click(function(){
     if (cmenuItemClicked.charAt(0) == '/') cmenuItemClicked = cmenuItemClicked.substr(1);
     // This is the triggered action name
     switch($(this).attr("data-action")) {
+        case "importFile":
+            openInputDialog("Import file", "", "", "<form enctype='multipart/form-data' action='/project/"+ pid +"/upload' method='post'>" +
+            "<input id='dialogInput' type='file' required multiple/></form>", function (inp) {
+                inp = inp.substr(inp.lastIndexOf("/") + 1);
+                inp = inp.substr(inp.lastIndexOf("\\") + 1);
+                if (!fileRegExp.test(inp)) {
+                    alert("Invalid file name: " + inp);
+                    return false;
+                }
+                var form = $("#dialogTarget").find("form")[0];
 
+                console.log(form);
+                var fd = new FormData(document.querySelector("form"));
+                fd.append("CustomField", "This is some extra data");
+                $.ajax({
+                    url: "/project/" + pid + "upload",
+                    type: "POST",
+                    data: fd,
+                    processData: false,  // tell jQuery not to process the data
+                    contentType: false   // tell jQuery not to set contentType
+                });
+
+                // form.submit(function(ev) {
+                //     oData.append("CustomField", "This is some extra data");
+                //     var oReq = new XMLHttpRequest();
+                //     oReq.open("POST", "stash.php", true);
+                //     oReq.onload = function(oEvent) {
+                //         if (oReq.status == 200) {
+                //             oOutput.innerHTML = "Uploaded!";
+                //         } else {
+                //             oOutput.innerHTML = "Error " + oReq.status + " occurred when trying to upload your file.<br \/>";
+                //         }
+                //     };
+                //
+                //     oReq.send(oData);
+                //     ev.preventDefault();
+                //
+                //     // e.preventDefault();
+                //     // $(this).ajaxSubmit().done(function (data) {
+                //     //     var x = JSON.parse(data);
+                //     //     alert("Success : " + x);
+                //     // }).fail(function (data) {
+                //     //     var x = JSON.parse(data);
+                //     //     alert("Error : " + x);
+                //     // });
+                // });
+                return true;
+            });
+            break;
         case "addNewDir":
-            openInputDialog("New directory", cmenuItemClicked + "/", "", function (inp) {
+            openInputDialog("New directory", cmenuItemClicked + "/", "", "<input id='dialogInput' type='text'/>", function (inp) {
                 return dirRegExp.test(inp);
             });
             break;
         case "addNewFile":
-            openInputDialog("New file", cmenuItemClicked + "/", "", function (inp) {
+            openInputDialog("New file", cmenuItemClicked + "/", "", "<input id='dialogInput' type='text'/>", function (inp) {
                 return fileRegExp.test(inp);
             });
             break;
@@ -212,7 +260,7 @@ $(".custom-menu li").click(function(){
             var i = cmenuItemClicked.lastIndexOf("/");
             var s1 = cmenuItemClicked.substr(0, i+1);
             var sr = cmenuItemClicked.substr(i+1);
-            openInputDialog("Rename", s1, sr, function (inp) {
+            openInputDialog("Rename", s1, sr, "<input id='dialogInput' type='text'/>", function (inp) {
                 return fileRegExp.test(inp);
             });
             break;
@@ -222,7 +270,7 @@ $(".custom-menu li").click(function(){
             resizable: false,
             title:"Delete file?",
             height: "auto",
-            width: 400,
+            width: "auto",
             modal: true,
             buttons: {
                 "Yes": function() {
@@ -238,7 +286,5 @@ $(".custom-menu li").click(function(){
         });
             break;
     }
-
-    // Hide it AFTER the action was triggered
     $(".custom-menu").hide(100);
 });

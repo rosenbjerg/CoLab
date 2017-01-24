@@ -49,7 +49,7 @@ namespace CoLab
                 res.SendJson(p.Files);
             });
 
-            server.Post("/project/:project/file", (req, res) =>
+            server.Post("/project/:project/download", (req, res) =>
             {
                 string uid;
                 if (!VerifyUser(req, res, out uid)) return;
@@ -105,6 +105,28 @@ namespace CoLab
                     res.SendString("File with given name already exists in directory", status: 409);
                 else
                     res.SendString("OK");
+            });
+            server.Post("/project/:project/upload", async (req, res) =>
+            {
+                string uid;
+                if (!VerifyUser(req, res, out uid)) return;
+                var pid = req.Params["project"];
+                var p = pdb.FindById(pid);
+                if (p == null)
+                {
+                    res.SendString("Project not found", status: 404);
+                    return;
+                }
+                if (uid != p.OwnerId && !p.Collaborators.Contains(uid))
+                {
+                    res.SendString("You do not have access to the project", status: 401);
+                    return;
+                }
+                var save = await req.SaveBodyToFile(".projects/"+pid);
+                if (save)
+                    res.SendString("OK");
+                else
+                    res.SendString("Error", status: 500);
             });
 
             server.Get("/login", (req, res) =>

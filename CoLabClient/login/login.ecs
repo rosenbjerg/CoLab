@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login at CoLab</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Patua+One" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <style>
+<¤ ../../../CoLabClient/login/style.css ¤>
+    </style>
+</head>
+<body>
+    <header class="no-select">
+        CoLab Login
+    </header>
+    <div>
+        <form>
+            <ul>
+                <li><p>Email</p><input type="email" pattern="([!#$%&'*+\-/=?^_`{|}~A-Za-z0-9]+\.?)+@[\w\-]+(\.\w+)*.[A-Za-z]{1,8}" required></li>
+                <li><p>Password</p><input type="password" required pattern=".{6,}"></li>
+                <li><input type="submit"></li>
+            </ul>
+        </form>
+        <p id="status"></p>
+    </div>
+    <script>
+        var rp = '<% rp %>';
+<¤ ../../../CoLabClient/login/main.js ¤>
+    </script>
+</body>
+</html>

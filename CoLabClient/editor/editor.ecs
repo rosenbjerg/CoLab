@@ -11,7 +11,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
+    <style>
+        <¤ ../../../CoLabClient/editor/style.css ¤>
+    </style>
 </head>
 <body>
     <div class="header">
@@ -19,7 +21,7 @@
     <table class="content">
         <tr>
             <td id="panel">
-                <div id="project-explorer-header"><a name="">Test project</a></div>
+                <div id="project-explorer-header"><a id="0" name=""></a></div>
                 <ul id="project-explorer-files" class="tree no-select">
                 </ul>
                 <ul class='custom-menu no-select' id="rootdir-rightclick">
@@ -30,7 +32,7 @@
                 <ul class='custom-menu no-select' id="dir-rightclick">
                     <li data-action = "addNewFile">Add new file</li>
                     <li data-action = "addNewDir">Add new directory</li>
-                    <li data-action = "importFile">Upload file(s)</li>
+                    <li data-action = "importFile">Upload file</li>
                     <li data-action = "rename">Rename</li>
                     <li data-action = "delete">Delete</li>
                 </ul>
@@ -48,6 +50,13 @@
         <div id="position">1:0</div>
     </div>
     <div id="dialogTarget"></div>
-    <script src="main.js"></script>
+    <iframe id="uploadTrg" name="uploadTrg" height="0" width="0" frameborder="0" scrolling="yes"></iframe>
+    <script>
+        var fname = "<% fname %>";
+        var fid = "<% fid %>";
+        var pid = "<% pid %>";
+        var uid = "<% uid %>";
+        <¤ ../../../CoLabClient/editor/main.js ¤>
+    </script>
 </body>
 </html>

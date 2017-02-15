@@ -39,6 +39,7 @@ html, body {
 
 .ace_editor *::-webkit-scrollbar {
     width: 0.7em;
+    height: 0.7em;
 }
 
 .ace_editor *::-webkit-scrollbar-track {
@@ -59,7 +60,7 @@ html, body {
     color: #212121;
     text-decoration: none;
 }
-#project-explorer-files li:nth-child(odd){
+#project-explorer-files > li:nth-child(odd){
     background-color: #757575;
 }
 #position{
@@ -119,8 +120,14 @@ html, body {
     text-align: right;
 }
 
+#project-explorer-header{
+    background-color: #313131;
+}
+
 #project-explorer-header > a{
     cursor: pointer;
+    color: #dcdcdc;
+    padding-left: 4px;
 }
 
 #dialogTarget{

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New CoLab project</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Patua+One" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/2.3.1/jsencrypt.min.js"></script>
+    <style>
+        <¤ ../../../CoLabClient/newproject/style.css ¤>
+    </style>
+</head>
+<body>
+    <header class="no-select">
+        <div>New CoLab Project</div>
+    </header>
+    <div>
+        <form>
+            <ul>
+                <li><a>Project name</a><input type="text" required id="pn"></li>
+                <li class="desc"><a>Project description</a><textarea required type="text" id="pd"></textarea> </li>
+                <li>
+                    <a>Collaborators</a>
+                    <input type="text" id="search">
+                    <ul id="searchResults">
+
+                    </ul>
+                    <ul id="collabs">
+
+                    </ul>
+                </li>
+                <li><input type="submit" value="Create"/></li>
+            </ul>
+        </form>
+    </div>
+    <script>
+<¤ pages/newproject/main.js ¤>
+    </script>
+</body>
+</html>

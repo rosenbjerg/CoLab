@@ -2,7 +2,7 @@
 
 namespace CoLab
 {
-    class FileWrap
+    public class FileWrap
     {
         public FileWrap()
         {
@@ -17,6 +17,6 @@ namespace CoLab
 
         public string Name { get; set; }
         public string Id { get; set; }
-
+        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
     }
 }

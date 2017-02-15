@@ -36,8 +36,9 @@ namespace CoLab
             {
                 return false;
             }
-            Directory.CreateDirectory(filepath);
-            File.WriteAllText(filepath, "");
+            Directory.CreateDirectory(Path.Combine(projDir, project));
+            File.WriteAllText(filepath + ".txt", "");
+            File.Move(filepath + ".txt", filepath);
             return true;
         }
 
@@ -49,7 +50,24 @@ namespace CoLab
                 return null;
             }
             var ret = EditableFile.FromFile(filepath);
-            return ;
+            return ret;
+        }
+
+        public static bool Import(string from, string pid, string fid)
+        {
+            if (!File.Exists(from)) return false;
+            Directory.CreateDirectory(Path.Combine(projDir, pid));
+            var filepath = Path.Combine(projDir, pid, fid);
+            File.Copy(from, filepath);
+            return true;
+        }
+
+        public static void Remove(string pid, string fid)
+        {
+            var filepath = Path.Combine(projDir, pid, fid);
+            if (!File.Exists(filepath))
+                return;
+            File.Delete(filepath);
         }
     }
 }

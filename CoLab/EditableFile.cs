@@ -6,14 +6,15 @@ using RHttpServer;
 
 namespace CoLab
 {
-    class EditableFile
+    public class EditableFile
     {
         private EditableFile()
         {
 
         }
         
-        public List<WebSocketDialog> ActiveEditors { get; } = new List<WebSocketDialog>();
+
+        public SynchronizedCollection<WebSocketDialog> ActiveEditors { get; } = new SynchronizedCollection<WebSocketDialog>();
 
         public string FileId { get; private set; }
 
@@ -33,6 +34,10 @@ namespace CoLab
         {
             if (tc.action == "insert")
             {
+                while (_lines.Count -1 < tc.end.row)
+                {
+                    _lines.Add(new StringBuilder());
+                }
                 var firstLine = _lines[tc.start.row];
                 if (tc.start.row == tc.end.row)
                 {
@@ -67,7 +72,7 @@ namespace CoLab
                     firstLine.Append(lastLine);
                     _lines.RemoveAt(tc.end.row);
 
-                    for (var i = tc.start.row + 1; i < tc.end.row; i++)
+                    for (var i = tc.start.row + 1; i < tc.end.row-1; i++)
                         _lines.RemoveAt(tc.start.row + 1);
                 }
                 
@@ -83,12 +88,22 @@ namespace CoLab
             return string.Join(lineEnding, _lines);
         }
 
-        public void Save(string lineEnding = "\n")
+        public void Save()
         {
             if (!_changes) return;
-            File.WriteAllText(FileId, GetString(lineEnding));
+            TrimEmptyLines();
+            File.WriteAllText(FileId, GetString());
             _changes = false;
             Console.WriteLine(FileId + " saved");
+        }
+
+        private void TrimEmptyLines()
+        {
+            for (int i = _lines.Count-1; i > 0; i--)
+            {
+                if (_lines[i].Length != 0) break;
+                _lines.RemoveAt(i);
+            }
         }
     }
 }

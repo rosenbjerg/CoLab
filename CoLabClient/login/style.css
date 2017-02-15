@@ -1,0 +1,64 @@
+*{
+    margin:0;
+    padding:0;
+    color: #dcdcdc;
+    font-family: 'Open Sans', sans-serif;
+}
+
+body{
+    background-color: #616161;
+}
+.no-select, form p {
+    user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+}
+header{
+
+    font-family: 'Patua One', cursive;
+    font-size: 50px;
+    height: 70px;
+    background-color: #424242;
+    text-align: center;
+}
+
+ul, li{
+    list-style: none;
+}
+
+li p{
+    width: 100px;
+    display: inline-block;
+}
+
+form{
+    width: 300px;
+    margin: auto;
+    margin-top: 10%;
+}
+
+input{
+    border-radius: 2px;
+    margin-top: 5px;
+    margin-bottom: 5px
+}
+
+input[type=text], input[type=password], input[type=email]{
+    width: 200px;
+    border: #424242;
+    background-color: #424242;
+}
+
+input[type=submit]{
+    border: solid #424242;
+    background-color: #424242;
+    float: right;
+}
+
+#status{
+    text-align: center;
+    margin-top: 50px;
+    font-size: 13px;
+}

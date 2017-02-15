@@ -1,0 +1,65 @@
+*{
+    margin:0;
+    padding:0;
+    color: #dcdcdc;
+    font-family: 'Open Sans', sans-serif;
+}
+
+body{
+    background-color: #616161;
+}
+.no-select, a {
+    user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+}
+header{
+    height: 70px;
+    background-color: #424242;
+}
+header div{
+    font-family: 'Patua One', cursive;
+    font-size: 50px;
+    width: 700px;
+    margin: auto;
+}
+
+body > div{
+    width: 700px;
+    margin: auto;
+    margin-top: 8%;
+}
+
+.desc, .desc * {
+    height: 4.3em;
+}
+
+li{
+    margin: 10px;
+    margin-left:0;
+    margin-right:0;
+}
+
+input, textarea{
+    border: #424242;
+    background-color: #424242;
+    border-radius: 2px;
+    float: right;
+    width: 520px;
+    resize: none;
+}
+
+input[type='submit']{
+    width: 100px;
+}
+
+p{
+    font-size: 22px;
+    margin-top: 26px;
+}
+
+ul{
+    list-style: none;
+}

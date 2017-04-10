@@ -6,8 +6,8 @@
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Patua+One" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/2.3.1/jsencrypt.min.js"></script>
     <style>
+        /*<¤ pages/projects/style.css ¤>*/
         <¤ ../../../CoLabClient/projects/style.css ¤>
     </style>
 </head>
@@ -26,6 +26,7 @@
     </div>
     <script>
         var projects = <% projects %>;
+//        <¤ pages/projects/main.js ¤>
         <¤ ../../../CoLabClient/projects/main.js ¤>
     </script>
 </body>

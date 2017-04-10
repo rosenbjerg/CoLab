@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css?family=Patua+One" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <style>
+/*<¤ pages/login/style.css ¤>*/
 <¤ ../../../CoLabClient/login/style.css ¤>
     </style>
 </head>
@@ -25,7 +26,7 @@
         <p id="status"></p>
     </div>
     <script>
-        var rp = '<% rp %>';
+//<¤ pages/login/main.js ¤>
 <¤ ../../../CoLabClient/login/main.js ¤>
     </script>
 </body>

@@ -10,11 +10,14 @@ namespace CoLab
     {
         private EditableFile()
         {
-
         }
-        
 
-        public SynchronizedCollection<WebSocketDialog> ActiveEditors { get; } = new SynchronizedCollection<WebSocketDialog>();
+        private readonly List<StringBuilder> _lines = new List<StringBuilder>();
+        private bool _changes;
+
+
+        public SynchronizedCollection<WebSocketDialog> ActiveEditors { get; } =
+            new SynchronizedCollection<WebSocketDialog>();
 
         public string FileId { get; private set; }
 
@@ -22,11 +25,9 @@ namespace CoLab
         {
             if (!File.Exists(file)) return null;
             var lines = File.ReadLines(file);
-            var retVal = new EditableFile {FileId = file.Substring(file.LastIndexOf("/") +1)};
+            var retVal = new EditableFile {FileId = file.Substring(file.LastIndexOf("/") + 1)};
             foreach (var line in lines)
-            {
                 retVal._lines.Add(new StringBuilder(line));
-            }
             return retVal;
         }
 
@@ -34,7 +35,7 @@ namespace CoLab
         {
             if (tc.action == "insert")
             {
-                while (_lines.Count -1 < tc.end.row)
+                while (tc.start.row > _lines.Count - 1)
                 {
                     _lines.Add(new StringBuilder());
                 }
@@ -45,43 +46,48 @@ namespace CoLab
                 }
                 else
                 {
-                    var toMove = firstLine.ToString(tc.start.column, firstLine.Length - tc.start.column);
-                    firstLine.Remove(tc.start.column, firstLine.Length - tc.start.column);
+                    var ml = firstLine.Length - tc.start.column;
+                    var toMove = firstLine.ToString(tc.start.column, ml);
+                    firstLine.Remove(tc.start.column, ml);
                     firstLine.Append(tc.lines[0]);
 
-                    int i = 1;
+                    var i = 1;
                     for (; i < tc.lines.Length; i++)
-                    {
                         _lines.Insert(tc.start.row + i, new StringBuilder(tc.lines[i]));
-                    }
                     _lines[tc.start.row + i - 1].Append(toMove);
                 }
             }
             else
             {
+                if (tc.start.row > _lines.Count)
+                    return;
+                if (tc.end.row > _lines.Count)
+                    tc.end.row = _lines.Count;
                 var firstLine = _lines[tc.start.row];
                 if (tc.start.row == tc.end.row)
                 {
-                    firstLine.Remove(tc.start.column, tc.end.column-tc.start.column);
+                    firstLine.Remove(tc.start.column, tc.end.column - tc.start.column);
                 }
                 else
                 {
-                    firstLine.Remove(tc.start.column, firstLine.Length - tc.start.column);
+                    var frStart = tc.start.column > firstLine.Length
+                        ? firstLine.Length
+                        : firstLine.Length - tc.start.column;
+                    var frEnd = firstLine.Length - frStart;
+                    firstLine.Remove(frStart, frEnd);
                     var lastLine = _lines[tc.end.row];
-                    lastLine.Remove(0, tc.end.column);
-                    firstLine.Append(lastLine);
-                    _lines.RemoveAt(tc.end.row);
-
-                    for (var i = tc.start.row + 1; i < tc.end.row-1; i++)
-                        _lines.RemoveAt(tc.start.row + 1);
+                    if (tc.end.column < lastLine.Length)
+                    {
+                        lastLine.Remove(0, tc.end.column);
+                        firstLine.Append(lastLine);
+                    }
+                    var s = tc.start.row + 1;
+                    var c = tc.end.row - s; // tc.start.row;
+                    _lines.RemoveRange(s, c);
                 }
-                
             }
             _changes = true;
         }
-
-        private readonly List<StringBuilder> _lines = new List<StringBuilder>();
-        private bool _changes;
 
         public string GetString(string lineEnding = "\n")
         {
@@ -94,12 +100,11 @@ namespace CoLab
             TrimEmptyLines();
             File.WriteAllText(FileId, GetString());
             _changes = false;
-            Console.WriteLine(FileId + " saved");
         }
 
         private void TrimEmptyLines()
         {
-            for (int i = _lines.Count-1; i > 0; i--)
+            for (var i = _lines.Count - 1; i > 0; i--)
             {
                 if (_lines[i].Length != 0) break;
                 _lines.RemoveAt(i);

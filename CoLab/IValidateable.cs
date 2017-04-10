@@ -1,6 +1,6 @@
 namespace CoLab
 {
-    interface IValidateable
+    internal interface IValidateable
     {
         bool Validate();
     }

@@ -1,5 +1,5 @@
 var Range = require("ace/range").Range;
-var editor, session, ws, clickedId, clickedName, inserting = false, changingFile = false;
+var editor, session, ws, clickedId, clickedName, inserting = false, changingFile = false, curFid = "";
 var $pos = $("#position"), $filePanel = $("#project-explorer-files");
 var dirRegExp = /^[\w]+$/, fileRegExp = /^[\w\.\-]+$/;
 var modelist = ace.require("ace/ext/modelist");
@@ -15,53 +15,81 @@ editor.setOptions({
 editor.setTheme("ace/theme/monokai");
 editor.setReadOnly(true);
 $("#ace_settingsmenu, #kbshortcutmenu").css("background-color", "#616161");
+session.on('change', onSessionTextChange);
+session.selection.on('changeCursor', onSessionCursorChanged);
+var undoManager = session.$undoManager;
+
+function getQueryVal(name, url) {
+    if (!url)
+        url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
 
 function loadFile(fid, name) {
-    if (ws)
-        ws.close();
-    session.removeAllListeners('change');
-    $.get("http://localhost:5005" + "/project/" + pid + "/" + fid, function( data ) {
+    if (curFid == fid)
+        return;
+    $.get("/project/" + pid + "/" + fid, function( data ) {
         changingFile = true;
         editor.setReadOnly(false);
+        session.setValue(data);
         session.setMode(modelist.getModeForPath(name).mode);
-        editor.session.setValue(data);
         editor.focus();
         changingFile = false;
         connectWS(fid);
         var stateObj = {foo: "bar"};
-        history.replaceState(stateObj, name + " - CoLob", location.pathname + "?fid="+fid);
+        var extension = name.substr((name.lastIndexOf('.')+1));
+        history.replaceState(stateObj, name+" - CoLob", location.pathname+"?m="+extension+"&fid="+fid);
+        curFid = fid;
     });
 }
 
 function loadProjectMeta(){
-    $.getJSON("http://localhost:5005" + "/project/" + pid + "/meta", function (data) {
+    $.getJSON("/project/" + pid + "/meta", function (data) {
         loadMenu(data.Files);
         $("#project-explorer-header").find("> a").text(data.Title);
     })
 }
 
-function connectWS(fid) {
-    ws = new WebSocket("ws://localhost:5005" +"/" + pid + "/" + fid);
+function onSessionTextChange(e) {
+    if (!inserting && !changingFile)
+    {
+        if (e.action == "remove")
+            e.lines = [];
+        e.sender = sessionStorage.getItem("sessid");
+        ws.send("tc" + JSON.stringify(e));
+    }
+}
+function onSessionCursorChanged() {
+    var c = editor.selection.getCursor();
+    $pos.text(c.row +1 + ":" + c.column);
+}
 
-    session.selection.on('changeCursor', function() {
-        var c = editor.selection.getCursor();
-        setPosition(c.row +1, c.column);
-    });
-    session.on('change', function(e) {
-        if (!inserting && !changingFile)
-        {
-            if (e.action == "remove")
-                e.lines = [];
-            e.sender = uid;
-            ws.send("tc" + JSON.stringify(e));
-            console.log(" change sent");
-        }
-    });
+var msbuffer = "";
+function connectWS(fid) {
+    if (ws)
+        ws.close();
+    ws = new WebSocket("wss://colab.rosenbjerg.dk" +"/" + pid + "/" + fid);
     ws.onmessage = function (msg) {
+        console.log(msg);
+        console.log(msg.data);
+        if (msg.data.charAt(msg.data.length-1) != "}" || msg.data.charAt(2) != "{"){
+            msbuffer += msg.data;
+            return;
+        }
+        if (msbuffer != ""){
+            msbuffer += msg.data;
+            msg.data = msbuffer;
+            msbuffer = "";
+        }
         var data = JSON.parse(msg.data.substr(2));
         var msgType = msg.data.substr(0,2);
         if (msgType == "tc"){
-            if (data.sender == uid)
+            if (data.sender == sessionStorage.getItem("sessid"))
                 return;
             inserting = true;
             if (data.action == "insert")
@@ -73,16 +101,14 @@ function connectWS(fid) {
         else if (msgType == "rf"){
             loadProjectMeta();
         }
-
-
     };
 }
 
 window.addEventListener("beforeunload", function () {
-    ws.close();
+    if (ws)
+        ws.close();
 });
 
-// If the document is clicked somewhere
 $(document).bind("mousedown", function (e) {
     if (!$(e.target).parents(".custom-menu").length > 0) {
         $(".custom-menu").hide(100);
@@ -193,7 +219,7 @@ function announceRefresh() {
 $(".custom-menu li").click(function(){
     switch($(this).attr("data-action")) {
         case "importFile":
-            openInputDialog("Import file", "", "", "<form id='dialogForm' enctype='multipart/form-data' action='http://localhost:5005/project/"+ pid +"/upload/"+ clickedId +"' method='post'  target='uploadTrg'>" +
+            openInputDialog("Import file", "", "", "<form id='dialogForm' enctype='multipart/form-data' action='/project/"+ pid +"/upload/"+ clickedId +"' method='post'  target='uploadTrg'>" +
             "<input id='dialogInput' type='file' required='required'/></form>", function (inp) {
                 var startIndex = (inp.indexOf('\\') >= 0 ? inp.lastIndexOf('\\') : inp.lastIndexOf('/'));
                 inp = inp.substr(startIndex + 1);
@@ -203,12 +229,17 @@ $(".custom-menu li").click(function(){
                     return false;
                 }
                 var form = document.getElementById('dialogForm');
-                console.log(form);
-                var fd = new FormData(form);
+                var form2 = $("#dialogInput")[0];
+                console.log(form2.files[0]);
+                var fd = new FormData();
+                // fd.append()
 
                 var xhr = new XMLHttpRequest();
-                xhr.open('POST', "http://localhost:5005" + "/project/" + pid + "/upload/" + clickedId, true);
+                xhr.open('POST', "/project/" + pid + "/upload/" + clickedId, true);
                 xhr.setRequestHeader("Content-type", "multipart/form-data");
+                xhr.onload = function (ev) {
+                    console.log(ev);
+                };
                 xhr.send(fd);
 
                 // loadProjectMeta();
@@ -222,7 +253,7 @@ $(".custom-menu li").click(function(){
                 return dirRegExp.test(inp);
             }, function (filename) {
                 var fullname = clickedId + "/" + filename;
-                $.post("http://localhost:5005" + "/project/" + pid + "/create/dir", fullname, function (data, status) {
+                $.post("/project/" + pid + "/create/dir", fullname, function (data, status) {
                     if (data == "OK"){
                         loadProjectMeta();
                         announceRefresh();
@@ -238,7 +269,7 @@ $(".custom-menu li").click(function(){
                 return fileRegExp.test(inp);
             }, function (filename) {
                 var fullname = clickedId + "/" + filename;
-                $.post("http://localhost:5005" + "/project/" + pid + "/create/file", fullname, function (data, status) {
+                $.post("/project/" + pid + "/create/file", fullname, function (data, status) {
                     if (data == "OK"){
                         loadProjectMeta();
                         announceRefresh();
@@ -256,7 +287,7 @@ $(".custom-menu li").click(function(){
             openInputDialog("Rename", s1, sr, "<input id='dialogInput' type='text'/>", function (inp) {
                 return fileRegExp.test(inp);
             }, function (filename) {
-                $.post("http://localhost:5005" + "/project/" + pid + "/rename", clickedId + "/" + filename , function (data, status) {
+                $.post("/project/" + pid + "/rename", clickedId + "/" + filename , function (data, status) {
                     if (data == "OK"){
                         loadProjectMeta();
                         announceRefresh();
@@ -279,7 +310,7 @@ $(".custom-menu li").click(function(){
                     "Yes": function() {
                         if (confirm("Deleting a directory will also delete anything in the directory. Are you sure you want to delete it?"))
                         {
-                            $.post("http://localhost:5005" + "/project/" + pid + "/delete", clickedId, function (data) {
+                            $.post("/project/" + pid + "/delete", clickedId, function (data) {
                                 if (data == "OK"){
                                     loadProjectMeta();
                                     announceRefresh();
@@ -303,9 +334,16 @@ $(".custom-menu li").click(function(){
     $(".custom-menu").hide(100);
 });
 
-function setPosition(l,c) {
-    $pos.text(l + ":" + c);
+if (sessionStorage.getItem("sessid") == null){
+    sessionStorage.setItem("sessid", uid+Math.random().toString(36).substr(2, 5))
 }
 
-
+function loadPageQuery() {
+    var fid = getQueryVal('fid');
+    var mode = getQueryVal('m');
+    if (fid != null){
+        loadFile(fid,"file."+mode);
+    }
+}
 loadProjectMeta();
+loadPageQuery();

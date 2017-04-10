@@ -1,5 +1,3 @@
-using Org.BouncyCastle.Crypto;
-
 namespace CoLab
 {
     internal class Registration : IValidateable
@@ -12,7 +10,7 @@ namespace CoLab
         public string dt { get; set; }
         public string em { get; set; }
         public string pw { get; set; }
-        
+
         public bool Validate()
         {
             if (string.IsNullOrWhiteSpace(fn)) return false;

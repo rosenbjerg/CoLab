@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://www.google.com/recaptcha/api.js?onload=loadCaptcha&render=explicit" async defer></script>
     <style>
+        /*<¤ pages/register/style.css ¤>*/
         <¤ ../../../CoLabClient/register/style.css ¤>
     </style>
 </head>
@@ -286,13 +287,12 @@
                 <li><p>Password*</p><input id="pw1" type="password" pattern=".{6,}" title="6 characters minimum" required></li>
                 <li><p>Confirm password*</p><input id="pw2" type="password" required></li>
                 <li><div class="g-recaptcha" id="recaptcha" data-sitekey="6LeruxQUAAAAAK9TX40UB9pbaaZUi_3D1-vISL5p"></div></li>
-
             </ul>
         </form>
         <p id="status"></p>
     </div>
     <script>
-        var openfile = "<% openFile %>"
+//        <¤ pages/register/main.js ¤>
         <¤ ../../../CoLabClient/register/main.js ¤>
     </script>
 </body>

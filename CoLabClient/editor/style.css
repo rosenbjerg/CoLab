@@ -5,16 +5,20 @@
 html, body {
     height: 100%;
     background-color: #424242;
+    overflow-y: hidden;
 }
-.header{
-    height: 75px;
+header{
+    height: 50px;
+    max-height: 15%;
 }
-.footer{
+footer *{
     height: 15px;
+    max-height: 5%
 }
 .content{
-    height: calc(100% - 90px);
+    height: calc(100% - 65px);
     width: 100%;
+    min-height: 80%;
 }
 .no-select{
     -webkit-user-select: none; /* Chrome/Safari */
@@ -25,13 +29,13 @@ html, body {
 }
 #panel{
     background-color: #616161;
-    width: 250px;
+    width: 15%;
     height: 100%;
     display: inline-block;
 }
 #code{
     height: 100%;
-    min-width: calc(100% - 250px);
+    min-width: calc(100% - 15%);
     display: inline-block;
 }
 .ace_editor, .ace_editor * {
@@ -64,7 +68,8 @@ html, body {
     background-color: #757575;
 }
 #position{
-    padding-left: 2px;
+    float: right;
+    padding-right: 8px;
     color: #dcdcdc;
     font-size: 12px;
     line-height: 14px;
@@ -80,6 +85,26 @@ html, body {
 
 #project-explorer-files .panel-dir{
     text-decoration: underline;
+}
+
+
+#ace_settingsmenu{
+
+    background-color: #515151 !important;
+}
+
+#ace_settingsmenu *{
+    color: #dcdcdc;
+}
+input[type=submit]{
+    display: none;
+}
+
+#ace_settingsmenu input[type=text], #ace_settingsmenu select{
+    background-color: #424242;
+    width: 170px;
+    float: right;
+    box-sizing : border-box;
 }
 
 .custom-menu {
@@ -110,12 +135,12 @@ html, body {
 }
 
 #ace_settingsmenu *, #kbshortcutmenu * {
-    background-color: #616161;
+    /*background-color: #616161;*/
     font-family: 'Open Sans', sans-serif;
 }
 
 #ace_settingsmenu input, #ace_settingsmenu select{
-    background-color: #818181;
+    /*background-color: #818181;*/
     border-width: 1px;
     text-align: right;
 }
@@ -134,6 +159,85 @@ html, body {
     display: none;
 }
 
+.right-top-menu{
+    float: right;
+    height: 100%;
+    padding-right: 10px;
+}
+
+header li {
+    list-style: none;
+    display: inline-block;
+}
+
+.left-menu{
+    margin-left: 3px;
+    display: inline-block;
+}
+
+.lower-left-top-menu button{
+    margin-top: 10px;
+    margin-left: 5px;
+    transition: background 400ms ease;
+    background: #424242;
+    border: none;
+    outline: none;
+    color: #dcdcdc;
+    border-radius: 1px;
+}
+.left-top-menu{
+    margin-left:6px;
+}
+
+.left-top-menu button.open {
+    background: #323232;
+    border: solid #323232;
+}
+
+.left-top-menu button:hover {
+    background: #373737;
+    border: solid #373737;
+}
+
+.left-top-menu button{
+    margin:0;
+    margin-top:2px;
+    background-color: #424242;
+    color: #dcdcdc;
+    border: solid #424242;
+    outline: none;
+    border-radius: 1px;
+    padding-left: 6px;
+    padding-right:7px;
+}
+
+.right-top-menu{
+    display: inline-block;
+}
+
+.white-effect:hover{
+    transition: background 200ms ease;
+    background: #525252;
+}
+.white-effect:active{
+     transition: background 100ms ease;
+     background: #9E9E9E;
+ }
+
+.right-top-menu button{
+    border-radius: 1px;
+    transition: background 400ms ease;
+    float: right;
+    font-size: 30px;
+    line-height:30px;
+    margin-top: 15px;
+    margin-right: 10px;
+    background: #424242;
+    border: none;
+    outline: none;
+    color: #dcdcdc;
+}
+
 .tree, .tree ul{
     list-style-type: none;
     padding: 0;
@@ -143,7 +247,7 @@ html, body {
 
 .tree li{
     margin: 0;
-    padding: 0 12px;
+    padding: 0 10px;
     position: relative;
 }
 
@@ -153,18 +257,17 @@ html, body {
     left: 0;
 }
 
-/* horizontal line on inner list items */
-.tree li::before{
+.tree ul li::before{
     border-top: 1px solid #212121;
     top: 10px;
     width: 10px;
     height: 0;
 }
-.tree li:after{
+.tree ul li:after{
     border-left: 1px solid #212121;
     height: 100%;
     width: 0;
-    top: -10px;
+    top: -11px;
 }
 .tree > li::after{
     top: 10px;

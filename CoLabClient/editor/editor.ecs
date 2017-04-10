@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>CoLab</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ext-modelist.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ext-language_tools.js"></script>
@@ -12,12 +13,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet">
     <style>
+        /*<¤ pages/editor/style.css ¤>*/
         <¤ ../../../CoLabClient/editor/style.css ¤>
     </style>
 </head>
 <body>
-    <div class="header">
-    </div>
+    <header>
+        <div class="left-menu">
+            <ul class="left-top-menu">
+                <li><button>File</button></li>
+                <li><button>Edit</button></li>
+                <li><button>View</button></li>
+                <li><button>Project</button></li>
+            </ul>
+            <ul class="lower-left-top-menu">
+                <li><button title="Undo" class="fa fa-undo white-effect" aria-hidden="true"></button></li>
+                <li><button title="Redo" class="fa fa-repeat white-effect" aria-hidden="true"></button></li>
+            </ul>
+        </div>
+        <ul class="right-top-menu">
+            <li><button title="Push to GitHub (coming later)" class="fa fa-github white-effect" aria-hidden="true"></button></li>
+            <li><button title="Download project" class="fa fa-files-o white-effect" aria-hidden="true"></button></li>
+            <li><button title="Download current file" class="fa fa-file-code-o white-effect" aria-hidden="true"></button></li>
+        </ul>
+    </header>
     <table class="content">
         <tr>
             <td id="panel">
@@ -46,16 +65,15 @@
         </tr>
     </table>
 
-    <div class="footer no-select">
+    <footer class="no-select">
         <div id="position">1:0</div>
-    </div>
+    </footer>
     <div id="dialogTarget"></div>
     <iframe id="uploadTrg" name="uploadTrg" height="0" width="0" frameborder="0" scrolling="yes"></iframe>
     <script>
-        var fname = "<% fname %>";
-        var fid = "<% fid %>";
         var pid = "<% pid %>";
         var uid = "<% uid %>";
+//        <¤ pages/editor/main.js ¤>
         <¤ ../../../CoLabClient/editor/main.js ¤>
     </script>
 </body>

@@ -13,7 +13,7 @@ function insertProject($paren, proj) {
     $paren.append("<li><a href='"+url+"' >"+proj.Name+"</a></li>");
 }
 $("#createNew").click(function () {
-    window.location = "http://localhost:5005" + "/createproject";
+    window.location = "/createproject";
 });
 
 setupProjects(projects);

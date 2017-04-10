@@ -6,7 +6,6 @@ namespace CoLab
     {
         public FileWrap()
         {
-            
         }
 
         public FileWrap(string name)

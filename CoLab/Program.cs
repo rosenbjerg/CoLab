@@ -1,40 +1,43 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using LiteDB;
-using Org.BouncyCastle.Crypto;
 using RHttpServer;
-using ServiceStack;
 
 namespace CoLab
 {
     internal class Program
     {
         private static readonly Random Random = new Random();
-        private static readonly ConcurrentDictionary<string, Project> ActiveProjects = new ConcurrentDictionary<string, Project>();
-        private static readonly ConcurrentDictionary<string, Session> Sessions = new ConcurrentDictionary<string, Session>();
-        private static readonly LiteCollection<Project> Pdb = new LiteDatabase("pdb.lite").GetCollection<Project>("Projects");
+
+        private static readonly ConcurrentDictionary<string, Project> ActiveProjects =
+            new ConcurrentDictionary<string, Project>();
+
+        private static readonly ConcurrentDictionary<string, Session> Sessions =
+            new ConcurrentDictionary<string, Session>();
+
+        private static readonly LiteCollection<Project> Pdb =
+            new LiteDatabase("pdb.lite").GetCollection<Project>("Projects");
+
         private static readonly LiteCollection<User> Udb = new LiteDatabase("udb.lite").GetCollection<User>("Users");
 
         private static void Mailer()
         {
-            string to = "malterandersen@live.dk"; //To address    
-            string from = "colab@rosenbjerg.dk"; //From address    
-            MailMessage message = new MailMessage(from, to);
+            var to = "malterandersen@live.dk"; //To address    
+            var from = "colab@rosenbjerg.dk"; //From address    
+            var message = new MailMessage(from, to);
 
-            string mailbody = "In this article you will learn how to send a email using Asp.Net & C#";
+            var mailbody = "In this article you will learn how to send a email using Asp.Net & C#";
             message.Subject = "Sending Email Using Asp.Net & C#";
             message.Body = mailbody;
             message.BodyEncoding = Encoding.UTF8;
             message.IsBodyHtml = true;
-            SmtpClient client = new SmtpClient("smtp.zoho.com", 465); //Gmail smtp    
-            System.Net.NetworkCredential cred = new System.Net.NetworkCredential("colab@rosenbjerg.dk", "colabflødebolle");
+            var client = new SmtpClient("smtp.zoho.com", 465);    
+            var cred = new NetworkCredential("colab@rosenbjerg.dk", "colabflødebolle");
             client.EnableSsl = true;
             client.UseDefaultCredentials = false;
             client.Credentials = cred;
@@ -44,26 +47,15 @@ namespace CoLab
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex); 
+                Console.WriteLine(ex);
             }
-
-
         }
 
         private static void Main(string[] args)
         {
             //const string pagePath = "pages/";
             const string pagePath = "../../../CoLabClient/";
-            var server = new TaskBasedHttpServer(5005, throwExceptions:true);
-            //var tp = new Project
-            //{
-            //    Title = "Test project",
-            //    OwnerId = "Malt",
-            //    Id = "testtest"
-            //};
-            //tp.AddFile("../../EditableFile.cs", "0", "EditableFile.cs");
-            //Pdb.Insert(tp);
-
+            var server = new TaskBasedHttpServer(5005, throwExceptions: true);
 
             server.Get("/project/:project", (req, res) =>
             {
@@ -74,12 +66,14 @@ namespace CoLab
                 Project p;
                 if (!TryGetProject(pid, uid, out p))
                 {
-                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you", status: 404);
+                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you",
+                        status: 404);
                     return;
                 }
                 var rp = new RenderParams
                 {
-                    {"pid", pid}
+                    {"pid", pid},
+                    {"uid", uid}
                 };
                 res.RenderPage(pagePath + "editor/editor.ecs", rp);
             });
@@ -93,7 +87,8 @@ namespace CoLab
                 Project p;
                 if (!TryGetProject(pid, uid, out p))
                 {
-                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you", status: 404);
+                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you",
+                        status: 404);
                     return;
                 }
                 res.SendJson(new
@@ -114,10 +109,11 @@ namespace CoLab
                 Project p;
                 if (!TryGetProject(pid, uid, out p))
                 {
-                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you", status: 404);
+                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you",
+                        status: 404);
                     return;
                 }
-              
+
                 var f = p.Files.GetFile(fid);
                 if (f == null)
                 {
@@ -127,9 +123,7 @@ namespace CoLab
 
                 EditableFile ef;
                 if (!p.OpenFiles.TryGetValue(fid, out ef))
-                {
                     ef = FileManager.GetEditable(pid, fid);
-                }
                 res.SendString(ef.GetString());
             });
 
@@ -142,14 +136,15 @@ namespace CoLab
                 Project p;
                 if (!TryGetProject(pid, uid, out p))
                 {
-                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you", status: 404);
+                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you",
+                        status: 404);
                     return;
                 }
                 var file = req.ParseBody<string>();
                 var split = file.Split('/');
                 if (split.Length != 2)
                 {
-                    res.SendString("Malformed request", status:400);
+                    res.SendString("Malformed request", status: 400);
                     return;
                 }
                 var id = split[0];
@@ -168,7 +163,8 @@ namespace CoLab
                 Project p;
                 if (!TryGetProject(pid, uid, out p))
                 {
-                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you", status: 404);
+                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you",
+                        status: 404);
                     return;
                 }
                 var id = req.ParseBody<string>();
@@ -186,7 +182,8 @@ namespace CoLab
                 Project p;
                 if (!TryGetProject(pid, uid, out p))
                 {
-                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you", status: 404);
+                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you",
+                        status: 404);
                     return;
                 }
 
@@ -210,33 +207,35 @@ namespace CoLab
                         p.CreateEmptyFile(id, newname);
                         break;
                     default:
-                        res.SendString("Malformed request", status:400);
+                        res.SendString("Malformed request", status: 400);
                         return;
                 }
 
                 Pdb.Update(p);
-                
+
                 res.SendString("OK");
             });
 
-            server.Post("/project/:project/upload/:pid", async (req, res) => 
+            server.Post("/project/:project/upload/:pid", async (req, res) =>
             {
                 res.AddHeader("Access-Control-Allow-Origin", "http://localhost:63342");
-                //string uid;
-                var uid = "Malt";
-                //if (!VerifyUser(req, res, false, out uid)) return;
+                string uid;
+                if (!VerifyUser(req, res, false, out uid)) return;
 
                 var pid = req.Params["project"];
                 var parent = req.Params["pid"];
                 Project p;
                 if (!TryGetProject(pid, uid, out p))
                 {
-                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you", status: 404);
+                    res.SendString("Unable to find project. It either does not exist, or is inaccessible to you",
+                        status: 404);
                     return;
                 }
 
                 var oldname = "";
                 var newname = RandomString(5);
+
+                var rse = req.ParseBody<string>();
 
                 var save = await req.SaveBodyToFile("temp", s =>
                 {
@@ -245,7 +244,9 @@ namespace CoLab
                     return newname;
                 }, 0x1400);
                 if (!save)
+                {
                     res.SendString("Error", status: 500);
+                }
                 else
                 {
                     p.AddFile("temp/" + newname, parent, oldname);
@@ -276,35 +277,36 @@ namespace CoLab
                     res.SendString("no");
                     return;
                 }
-                var colabs = (from c in proj.co select Udb.FindOne(u => u.Email == c) into d where d != null select d.Id).ToList();
+                //var colabs =
+                //    (from c in proj.co select Udb.FindOne(u => u.Email == c) into d where d != null select d.Id).ToList();
+                var users = Udb.FindAll();
                 var np = new Project
                 {
                     Title = proj.pn,
                     Description = proj.pd,
                     OwnerId = uid,
-                    Collaborators = colabs
+                    //Collaborators = colabs
+                    Collaborators = users.Select(x => x.Id).ToList()
                 };
                 user.Projects.Add(new ProjInf(np.Id, np.Title));
                 Udb.Update(user);
+                foreach (var c in users)
+                {
+                    c.CollaboratorOn.Add(new ProjInf(np.Id, np.Title));
+                    Udb.Update(c);
+                }
                 Pdb.Insert(np);
                 res.SendString(np.Id);
             });
 
-            server.Get("/login", (req, res) =>
-            {
-                var rp = req.Queries["rp"];
-                res.RenderPage(pagePath + "login/login.ecs", new RenderParams
-                {
-                    {"rp", rp}
-                });
-            });
+            server.Get("/login", (req, res) => { res.RenderPage(pagePath + "login/login.ecs", null); });
             server.Post("/login", async (req, res) =>
             {
                 res.AddHeader("Access-Control-Allow-Origin", "http://localhost:63342");
                 var login = req.ParseBody<Login>();
-                if (login == null ||!login.Validate())
+                if (login == null || !login.Validate())
                 {
-                    res.SendString("Malformed request", status:400);
+                    res.SendString("Malformed request", status: 400);
                     return;
                 }
                 var user = Udb.FindOne(u => u.Email == login.u);
@@ -314,22 +316,20 @@ namespace CoLab
                     res.SendString("no");
                     return;
                 }
-                
+
                 var session = new Session
                 {
                     Token = Guid.NewGuid().ToString("N"),
                     ExpireUTC = DateTime.UtcNow.AddHours(6)
                 };
                 Sessions[user.Id] = session;
-                var cookie = $"[\"id={user.Id}; expires={session.ExpireUTC:R}; path=/\",\"token={session.Token}; expires={session.ExpireUTC:R}; path=/\"]";
+                var cookie =
+                    $"[\"id={user.Id}; expires={session.ExpireUTC:R}; path=/\",\"token={session.Token}; expires={session.ExpireUTC:R}; path=/\"]";
                 //var cookie = $"[\"id={user.Id}; expires={session.ExpireUTC:R}; path=/; secure\",\"token={session.Token}; expires={session.ExpireUTC:R}; path=/; secure\"]";
                 res.SendString(cookie);
             });
 
-            server.Get("/register", (req, res) =>
-            {
-                res.RenderPage(pagePath + "register/register.ecs", null);
-            });
+            server.Get("/register", (req, res) => { res.RenderPage(pagePath + "register/register.ecs", null); });
             server.Post("/register", async (req, res) =>
             {
                 res.AddHeader("Access-Control-Allow-Origin", "http://localhost:63342");
@@ -367,7 +367,8 @@ namespace CoLab
                 var u = Udb.FindById(uid);
                 var rp = new RenderParams
                 {
-                    {"projects", new
+                    {
+                        "projects", new
                         {
                             own = u.Projects,
                             collab = u.CollaboratorOn
@@ -375,7 +376,6 @@ namespace CoLab
                     }
                 };
                 res.RenderPage(pagePath + "projects/projects.ecs", rp);
-
             });
 
             server.Get("/user", (req, res) =>
@@ -388,17 +388,16 @@ namespace CoLab
                     {"", ""}
                 };
                 res.RenderPage("pages/user.ecs", rp);
-
             });
-            
+
             server.Options("/*", (req, res) =>
             {
                 res.AddHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
                 res.AddHeader("Access-Control-Allow-Headers", "Content-Type");
-                res.AddHeader("Access-Control-Allow-Origin", "http://localhost:63342");
+                //res.AddHeader("Access-Control-Allow-Origin", "http://localhost:63342");
                 res.SendString("");
             });
-            
+
             server.WebSocket("/:project/:file", (req, wsd) =>
             {
                 string uid;
@@ -413,29 +412,63 @@ namespace CoLab
                     wsd.Close();
                     return;
                 }
-                
+
                 EditableFile file;
                 if (!p.OpenFiles.TryGetValue(fid, out file))
                 {
                     file = FileManager.GetEditable(pid, fid);
                     if (file != null)
+                    {
                         p.OpenFiles.TryAdd(fid, file);
+                    }
                     else
                     {
                         wsd.Close();
                         return;
                     }
                 }
-                
+
                 file.ActiveEditors.Add(wsd);
 
+                StringBuilder mb = new StringBuilder();
                 wsd.OnTextReceived += (sender, eventArgs) =>
                 {
-                    var msgt = eventArgs.Text.Substring(0, 2);
-                    var msgc = eventArgs.Text.Substring(2);
+                    string msgt, msgc;
+                    if (!eventArgs.EndOfMessage)
+                    {
+                        mb.Append(eventArgs.Text);
+                        return;
+                    }
+                    if (mb.Length != 0)
+                    {
+                        mb.Append(eventArgs.Text);
+                        var t = mb.ToString();
+                        msgt = t.Substring(0, 2);
+                        msgc = t.Substring(2);
+                        mb.Clear();
+                    }
+                    else
+                    {
+                        msgt = eventArgs.Text.Substring(0, 2);
+                        msgc = eventArgs.Text.Substring(2);
+                    }
+
 
                     if (msgt == "tc")
-                        file.ApplyTextChange(TextChange.FromJson(msgc));
+                    {
+                        try
+                        {
+                            var tc = TextChange.FromJson(msgc);
+                            file.ApplyTextChange(tc);
+                        }
+                        catch (Exception e)
+                        {
+
+                            Console.WriteLine(e);
+                            Console.WriteLine(msgc);
+                            return;
+                        }
+                    }
                     foreach (var w in file.ActiveEditors)
                         w.SendText(eventArgs.Text);
                 };
@@ -474,11 +507,12 @@ namespace CoLab
             var id = req.Cookies["id"]?.Value ?? "";
             var token = req.Cookies["token"]?.Value ?? "";
             Session sess;
-            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(id) || !Sessions.TryGetValue(id, out sess) || sess.Token != token)
+            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(id) || !Sessions.TryGetValue(id, out sess) ||
+                sess.Token != token)
             {
                 if (redirect)
                 {
-                    res.Redirect("/login?rp=" + req.UnderlyingRequest.Url.AbsolutePath);
+                    res.Redirect("/login?rp=" + req.UnderlyingRequest.Url.PathAndQuery);
                     uid = "";
                     return false;
                 }
@@ -489,13 +523,14 @@ namespace CoLab
             uid = id;
             return true;
         }
-        
+
         private static bool VerifyUser(RRequest req, WebSocketDialog wsd, out string uid)
         {
             var id = req.Cookies["id"].Value;
             var token = req.Cookies["token"].Value;
             Session sess;
-            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(id) || !Sessions.TryGetValue(id, out sess) || sess.Token != token)
+            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(id) || !Sessions.TryGetValue(id, out sess) ||
+                sess.Token != token)
             {
                 wsd.Close();
                 uid = "";
@@ -504,12 +539,12 @@ namespace CoLab
             uid = id;
             return true;
         }
-        
+
         public static string RandomString(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             return new string(Enumerable.Repeat(chars, length)
-              .Select(s => s[Random.Next(s.Length)]).ToArray());
+                .Select(s => s[Random.Next(s.Length)]).ToArray());
         }
 
         private static async void Persister()
@@ -518,14 +553,9 @@ namespace CoLab
             {
                 await Task.Delay(TimeSpan.FromMinutes(4));
                 foreach (var activeProject in ActiveProjects.Select(p => p.Value))
-                {
-                    foreach (var activeProjectOpenFile in activeProject.OpenFiles.Select(p => p.Value))
-                    {
-                        activeProjectOpenFile.Save();
-                    }
-                }
+                foreach (var activeProjectOpenFile in activeProject.OpenFiles.Select(p => p.Value))
+                    activeProjectOpenFile.Save();
             }
-
         }
 
         private static async void SessionsManager()

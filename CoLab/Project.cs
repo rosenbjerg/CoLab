@@ -1,17 +1,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using LiteDB;
 
 namespace CoLab
 {
     public class Project
     {
-        public Project()
-        {
-            
-        }
         [BsonId]
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
@@ -56,7 +51,10 @@ namespace CoLab
         public void Rename(string id, string newName)
         {
             var d = Files.GetDir(id);
-            if (d != null) d.Name = newName;
+            if (d != null)
+            {
+                d.Name = newName;
+            }
             else
             {
                 var f = Files.GetFile(id);
@@ -83,13 +81,9 @@ namespace CoLab
         private void DeleteDirectory(ProjDir dir)
         {
             foreach (var d in dir.Dirs)
-            {
                 DeleteDirectory(d);
-            }
             foreach (var f in dir.Files)
-            {
                 FileManager.Remove(Id, f.Id);
-            }
         }
     }
 
@@ -97,8 +91,8 @@ namespace CoLab
     {
         public ProjInf()
         {
-            
         }
+
         public ProjInf(string npId, string npTitle)
         {
             Id = npId;

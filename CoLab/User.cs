@@ -6,12 +6,9 @@ namespace CoLab
 {
     public class User
     {
-        public User()
-        {
-            
-        }
         [BsonId]
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
+
         public string Email { get; set; }
         public string DisplayName { get; set; }
         public string PassHash { get; set; }
@@ -33,10 +30,6 @@ namespace CoLab
 
     public class ProjectInvite
     {
-        public ProjectInvite()
-        {
-            
-        }
         public string Id { get; set; }
         public string Name { get; set; }
         public string InviterId { get; set; }

@@ -11,7 +11,7 @@ $form.submit(function (ev) {
     };
 
     $.ajax({
-        url:"http://localhost:5005" + "/createproject",
+        url:"/createproject",
         type:"POST",
         data:JSON.stringify(obj),
         contentType:"application/json; charset=utf-8",

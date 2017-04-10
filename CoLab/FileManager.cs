@@ -2,7 +2,7 @@ using System.IO;
 
 namespace CoLab
 {
-    static class FileManager
+    internal static class FileManager
     {
         private const string projDir = "./projects";
 
@@ -33,9 +33,7 @@ namespace CoLab
         {
             var filepath = Path.Combine(projDir, project, file);
             if (File.Exists(filepath))
-            {
                 return false;
-            }
             Directory.CreateDirectory(Path.Combine(projDir, project));
             File.WriteAllText(filepath + ".txt", "");
             File.Move(filepath + ".txt", filepath);
@@ -46,9 +44,7 @@ namespace CoLab
         {
             var filepath = Path.Combine(projDir, pid, fid);
             if (!File.Exists(filepath))
-            {
                 return null;
-            }
             var ret = EditableFile.FromFile(filepath);
             return ret;
         }

@@ -483,7 +483,7 @@ namespace CoLab
                 wsd.Ready();
             });
 
-            server.InitializeDefaultPlugins(false);
+            server.InitializeDefaultPlugins(true);
 
             SessionsManager();
             Persister();

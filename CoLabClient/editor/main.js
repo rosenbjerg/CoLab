@@ -73,7 +73,7 @@ var msbuffer = "";
 function connectWS(fid) {
     if (ws)
         ws.close();
-    ws = new WebSocket("wss://colab.rosenbjerg.dk" +"/" + pid + "/" + fid);
+    ws = new WebSocket("ws://localhost:5005" +"/" + pid + "/" + fid);
     ws.onmessage = function (msg) {
         console.log(msg);
         console.log(msg.data);
